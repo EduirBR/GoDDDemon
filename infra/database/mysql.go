@@ -3,6 +3,7 @@ package database
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"os"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -32,7 +33,18 @@ func DbConnect() *sql.DB {
 	fmt.Println(dbpath)
 	db_connect, err := sql.Open("mysql", dbpath)
 	if err != nil {
-		fmt.Println("error al conectar a la base de datos")
+		log.Println("error al conectar a la base de datos")
+		log.Println("Error", err)
 	}
 	return db_connect
+}
+
+func DbTest() {
+	dbconect := DbConnect()
+	err := dbconect.Ping()
+	if err != nil {
+		log.Println("Error: ", err)
+	} else {
+		fmt.Println("Pong Exitoso")
+	}
 }

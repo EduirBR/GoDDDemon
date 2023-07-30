@@ -3,6 +3,7 @@ package repositories
 import (
 	"ddd2/infra/database"
 	"fmt"
+	"log"
 	"reflect"
 	"strings"
 )
@@ -12,13 +13,6 @@ func CreateTable(tableName string, sample interface{}) error {
 	//conexion con la base de datos
 
 	db := database.DbConnect()
-	err2 := db.Ping()
-	if err2 != nil {
-		fmt.Println(err2)
-		fmt.Println("No se pudo conectar a la base de datos")
-	} else {
-		fmt.Println("Conexión exitosa a la base de datos")
-	}
 	defer db.Close()
 	// Obtener el tipo de la estructura
 	sampleType := reflect.TypeOf(sample)
@@ -55,10 +49,8 @@ func CreateTable(tableName string, sample interface{}) error {
 	// Ejecutar la consulta SQL
 	_, err := db.Exec(query)
 	if err != nil {
-		fmt.Println(err)
+		log.Println("Error", err)
 		return err
-	} else {
-		fmt.Println("good")
 	}
 	return nil
 }
