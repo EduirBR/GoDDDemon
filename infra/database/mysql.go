@@ -30,7 +30,6 @@ func dbConfig() string {
 func DbConnect() *sql.DB {
 
 	dbpath := dbConfig()
-	fmt.Println(dbpath)
 	db_connect, err := sql.Open("mysql", dbpath)
 	if err != nil {
 		log.Println("error al conectar a la base de datos")
