@@ -1,6 +1,7 @@
 package repositories
 
 import (
+	"database/sql"
 	"ddd2/infra/database"
 	"encoding/json"
 	"fmt"
@@ -110,4 +111,23 @@ func Insert(tableName string, obj interface{}, jsonD []byte) error {
 	}
 
 	return nil
+}
+
+func GetAll(tableName string) (*sql.Rows, error) {
+	query := fmt.Sprintf("SELECT * FROM %s", tableName)
+
+	//conexion con la base de datos
+	db := database.DbConnect()
+	defer db.Close()
+
+	rows, err := db.Query(query)
+	if err != nil {
+		log.Println("Error", err)
+		return nil, err
+	}
+	if err = rows.Err(); err != nil {
+		log.Println("Error", err)
+		return nil, err
+	}
+	return rows, nil
 }

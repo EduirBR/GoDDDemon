@@ -7,7 +7,13 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func GetMovie(c *fiber.Ctx) error {
+func GetMovies(c *fiber.Ctx) error {
+	c.Set("Context-Type", "applicaction/json")
+	objs, err := services.GetMovies()
+	if err != nil {
+
+	}
+	c.Status(fiber.StatusOK).JSON(objs)
 	return nil
 }
 
