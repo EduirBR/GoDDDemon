@@ -1,7 +1,6 @@
 package repositories
 
 import (
-	"database/sql"
 	"ddd2/infra/database"
 	"encoding/json"
 	"fmt"
@@ -107,27 +106,59 @@ func Insert(tableName string, obj interface{}, jsonD []byte) error {
 	// Ejecutar la consulta SQL
 	_, err = db.Exec(query, values...)
 	if err != nil {
+		log.Println("Error: ", err)
 		return err
 	}
 
 	return nil
 }
 
-func GetAll(tableName string) (*sql.Rows, error) {
+func GetAll(tableName string) ([]map[string]interface{}, error) {
 	query := fmt.Sprintf("SELECT * FROM %s", tableName)
 
 	//conexion con la base de datos
 	db := database.DbConnect()
 	defer db.Close()
-
+	//consulta
 	rows, err := db.Query(query)
 	if err != nil {
 		log.Println("Error", err)
 		return nil, err
 	}
+	//revision de errores
 	if err = rows.Err(); err != nil {
 		log.Println("Error", err)
 		return nil, err
 	}
-	return rows, nil
+	var data []map[string]interface{} // crea un objeto mapa con cuyos valores seran strings
+
+	columns, err := rows.Columns() //extrae las columnas de las filas dadas por la base de datos en un array de strings
+	if err != nil {
+		return nil, err
+	}
+	for rows.Next() {
+		values := make([]interface{}, len(columns))
+		valuePtrs := make([]interface{}, len(columns))
+		for i := range columns { // para la cantidad de columnas
+			valuePtrs[i] = &values[i] //crea una cantidad de variables igual a las columnas que hay
+		}
+		err := rows.Scan(valuePtrs...) // guarda los valores de las filas en cada una de las variables creadas
+		if err != nil {
+			log.Println("Error: ", err)
+			return nil, err
+		}
+		rowData := make(map[string]interface{}) //fila de datos
+		for i, col := range columns {           //itera la cantidad de columnas
+			val := values[i]      // para guardar los valores de la base de datos en var
+			b, ok := val.([]byte) //verifica si estan en bytes
+			if ok {
+				rowData[col] = string(b) //si? los convierte en string
+			} else {
+				rowData[col] = val //no? los guarda como estan
+			}
+		}
+		data = append(data, rowData) // guarda en un arreglo los mapas
+	}
+
+	return data, nil
 }

@@ -1,7 +1,7 @@
 package entities
 
 type Movie struct {
-	ID    int    `json:"idm" pk:"true" extra:"auto_increment"`
+	ID    int    `json:"id" pk:"true" extra:"auto_increment"`
 	Isbn  string `json:"isbn" extra:"not null"`
 	Title string `json:"title" unique:"true"`
 }
