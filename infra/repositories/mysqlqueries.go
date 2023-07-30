@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"ddd2/infra/database"
+	"encoding/json"
 	"fmt"
 	"log"
 	"reflect"
@@ -9,21 +10,18 @@ import (
 )
 
 // db *sql.DB,
-func CreateTable(tableName string, sample interface{}) error {
-	//conexion con la base de datos
+func CreateTable(tableName string, obj interface{}) error {
 
-	db := database.DbConnect()
-	defer db.Close()
 	// Obtener el tipo de la estructura
-	sampleType := reflect.TypeOf(sample)
+	objType := reflect.TypeOf(obj)
 
 	// Crear la consulta SQL
 	var columns []string
 	var unique []string
 	primaryKey := ""
 	uniqueSql := ""
-	for i := 0; i < sampleType.NumField(); i++ {
-		field := sampleType.Field(i)
+	for i := 0; i < objType.NumField(); i++ {
+		field := objType.Field(i)
 		columnName := field.Tag.Get("json")
 		columnType := getColumnType(field.Type)
 		extras := field.Tag.Get("extra")
@@ -45,7 +43,10 @@ func CreateTable(tableName string, sample interface{}) error {
 	}
 	query := fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s (%s%s%s);", tableName, strings.Join(columns, ", "), primaryKey, uniqueSql)
 
-	fmt.Println(query)
+	//conexion con la base de datos
+
+	db := database.DbConnect()
+	defer db.Close()
 	// Ejecutar la consulta SQL
 	_, err := db.Exec(query)
 	if err != nil {
@@ -66,4 +67,47 @@ func getColumnType(field reflect.Type) string {
 	default:
 		return "varchar(255)"
 	}
+}
+
+func Insert(tableName string, obj interface{}, jsonD []byte) error {
+	// Obtener el tipo de la estructura
+	objType := reflect.TypeOf(obj)
+
+	// Convertir el objeto JSON a un mapa
+	var data map[string]interface{}
+	err := json.Unmarshal(jsonD, &data)
+	if err != nil {
+		log.Println("Error", err)
+		return err
+	}
+
+	// Crear la consulta SQL
+	var columns []string
+	var values []interface{}
+	for i := 0; i < objType.NumField(); i++ {
+		field := objType.Field(i)
+		columnName := field.Tag.Get("json")
+		columnValue, ok := data[columnName]
+		if !ok {
+			continue
+		}
+		columns = append(columns, columnName)
+		values = append(values, columnValue)
+	}
+
+	n_values := strings.Repeat("?, ", len(values)-1) + "?"
+	query := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)", tableName, strings.Join(columns, ", "), n_values)
+
+	fmt.Println(query)
+	//conexion con la base de datos
+
+	db := database.DbConnect()
+	defer db.Close()
+	// Ejecutar la consulta SQL
+	_, err = db.Exec(query, values...)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

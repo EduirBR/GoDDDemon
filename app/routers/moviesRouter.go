@@ -9,4 +9,5 @@ import (
 func MoviesR(app *fiber.App) {
 	group := app.Group("/path")
 	group.Get("", filters.GetMovie)
+	group.Post("", filters.CreateMovie)
 }

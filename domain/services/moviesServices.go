@@ -5,7 +5,12 @@ import (
 	"ddd2/infra/repositories"
 )
 
+var main_obj = entities.Movie{}
+
 func CreateTableMovies() {
-	obj := entities.Movie{}
-	repositories.CreateTable(obj.GetDbName(), obj)
+	repositories.CreateTable(main_obj.GetDbName(), main_obj)
+}
+
+func CreateMovie(obj_json []byte) {
+	repositories.Insert(main_obj.GetDbName(), main_obj, obj_json)
 }
