@@ -98,7 +98,6 @@ func Insert(tableName string, obj interface{}, jsonD []byte) error {
 	n_values := strings.Repeat("?, ", len(values)-1) + "?"
 	query := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)", tableName, strings.Join(columns, ", "), n_values)
 
-	fmt.Println(query)
 	//conexion con la base de datos
 
 	db := database.DbConnect()
@@ -113,7 +112,8 @@ func Insert(tableName string, obj interface{}, jsonD []byte) error {
 	return nil
 }
 
-func GetAll(tableName string) ([]map[string]interface{}, error) {
+func GetAll(tableName string, dest interface{}) ([]map[string]interface{}, error) {
+
 	query := fmt.Sprintf("SELECT * FROM %s", tableName)
 
 	//conexion con la base de datos
@@ -132,33 +132,29 @@ func GetAll(tableName string) ([]map[string]interface{}, error) {
 	}
 	var data []map[string]interface{} // crea un objeto mapa con cuyos valores seran strings
 
-	columns, err := rows.Columns() //extrae las columnas de las filas dadas por la base de datos en un array de strings
-	if err != nil {
-		return nil, err
-	}
 	for rows.Next() {
-		values := make([]interface{}, len(columns))
-		valuePtrs := make([]interface{}, len(columns))
-		for i := range columns { // para la cantidad de columnas
-			valuePtrs[i] = &values[i] //crea una cantidad de variables igual a las columnas que hay
-		}
-		err := rows.Scan(valuePtrs...) // guarda los valores de las filas en cada una de las variables creadas
-		if err != nil {
-			log.Println("Error: ", err)
-			return nil, err
-		}
-		rowData := make(map[string]interface{}) //fila de datos
-		for i, col := range columns {           //itera la cantidad de columnas
-			val := values[i]      // para guardar los valores de la base de datos en var
-			b, ok := val.([]byte) //verifica si estan en bytes
-			if ok {
-				rowData[col] = string(b) //si? los convierte en string
-			} else {
-				rowData[col] = val //no? los guarda como estan
-			}
-		}
-		data = append(data, rowData) // guarda en un arreglo los mapas
-	}
 
+		destType := reflect.TypeOf(dest)
+
+		// Crear un slice de interfaces para almacenar los valores escaneados
+		values := make([]interface{}, destType.NumField())
+
+		// Asignar cada elemento del slice de interfaces a un campo de la interfaz de destino
+		for i := 0; i < destType.NumField(); i++ {
+			values[i] = reflect.New(destType.Field(i).Type).Interface()
+		}
+
+		// Escanear los valores de la fila en el slice de interfaces
+		err = rows.Scan(values...)
+		if err != nil {
+			log.Println(err)
+		}
+		fmt.Println(values)
+		// Asignar los valores escaneados a los campos de la interfaz de destino
+		for i := 0; i < destType.NumField(); i++ {
+			reflect.ValueOf(dest).Field(i).Set(reflect.ValueOf(values[i]))
+		}
+		fmt.Println(destType)
+	}
 	return data, nil
 }

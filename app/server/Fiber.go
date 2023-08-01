@@ -1,10 +1,14 @@
 package server
 
 import (
+	"ddd2/app/routers"
+
 	"github.com/gofiber/fiber/v2"
 )
 
-func Server() *fiber.App {
+func Server() {
 	app := fiber.New()
-	return app
+	routers.MoviesR(app)
+	routers.Routs(app)
+	app.Listen(":8888")
 }

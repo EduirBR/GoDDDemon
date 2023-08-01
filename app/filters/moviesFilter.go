@@ -3,6 +3,7 @@ package filters
 import (
 	"ddd2/domain/services"
 	"encoding/json"
+	"fmt"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -21,6 +22,7 @@ func CreateMovie(c *fiber.Ctx) error {
 	obj := fiber.Map{}
 	c.BodyParser(&obj)
 	objJSON, _ := json.Marshal(obj)
+	fmt.Println(objJSON)
 	services.CreateMovie(objJSON)
 	return nil
 }
