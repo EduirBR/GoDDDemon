@@ -3,16 +3,14 @@ package services
 import (
 	"ddd2/domain/entities"
 	"ddd2/infra/repositories"
+	"encoding/json"
 	"log"
-	"strconv"
-
-	"github.com/mitchellh/mapstructure"
 )
 
 var main_obj = entities.Movie{}
 
 func CreateTableMovies() {
-	repositories.CreateTable(main_obj.GetDbName(), main_obj)
+	repositories.CreateTable(main_obj.DbSchema())
 }
 
 func CreateMovie(obj_json []byte) {
@@ -20,21 +18,12 @@ func CreateMovie(obj_json []byte) {
 }
 
 func ListMovies() ([]entities.Movie, error) {
-	data, _ := repositories.GetAll(main_obj.GetDbName()) //Estrae las SQLRows
+	data, _ := repositories.GetAll(main_obj.GetDbName(), main_obj) //Estrae las SQLRows
 	var movies []entities.Movie
-
-	for _, d := range data {
-		movie := entities.Movie{}
-		id, _ := strconv.Atoi(d["id"].(string)) // comvierte a numero de str
-		delete(d, "id")                         // elimina el elemento id del mapa para evitar problemas al parsear
-		movie.ID = id
-		err := mapstructure.Decode(d, &movie) // mapstructure adapta lo que este en el mapa a la estructura siempre
-		//y cuando el tag de json sea el mismo nombre que en la base de datos.
-		if err != nil {
-			log.Println("Error ", err)
-			return nil, err
-		}
-		movies = append(movies, movie)
+	jsonStr, errs := json.Marshal(data)
+	if errs != nil {
+		log.Println(errs)
 	}
+	json.Unmarshal(jsonStr, &movies)
 	return movies, nil
 }
