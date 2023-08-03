@@ -7,14 +7,12 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func MoviesR(app *fiber.App) {
+func ModelsRoutes(app *fiber.App) {
 	group := app.Group("/path")
-	group.Get("", filters.GetMovies)
-	group.Post("", filters.CreateMovie)
+	group.Get("", filters.GetModels)
+	group.Post("", filters.CreateModel)
 	group.Get("/create", func(c *fiber.Ctx) error {
-
 		services.CreateTableMovies()
-
 		return nil
 	})
 }

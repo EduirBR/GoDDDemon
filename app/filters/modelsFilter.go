@@ -8,9 +8,9 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func GetMovies(c *fiber.Ctx) error {
+func GetModels(c *fiber.Ctx) error {
 	c.Set("Context-Type", "applicaction/json")
-	objs, err := services.ListMovies()
+	objs, err := services.ListModels()
 	if err != nil {
 		extras.Errors(extras.GetFunctionName(), err)
 	}
@@ -18,10 +18,10 @@ func GetMovies(c *fiber.Ctx) error {
 	return nil
 }
 
-func CreateMovie(c *fiber.Ctx) error {
+func CreateModel(c *fiber.Ctx) error {
 	obj := fiber.Map{}
 	c.BodyParser(&obj)
 	objJSON, _ := json.Marshal(obj)
-	services.CreateMovie(objJSON)
+	services.CreateModel(objJSON)
 	return nil
 }

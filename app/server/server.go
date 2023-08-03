@@ -16,7 +16,7 @@ func serverConfig() string {
 func RunServer() *fiber.App {
 	app := fiber.New()
 	routers.MoviesR(app)
-	routers.Routs(app)
+	routers.ModelsRoutes(app)
 	app.Listen(serverConfig())
 	return app
 }
