@@ -110,7 +110,8 @@ func getBytes(rows *sql.Rows) []byte {
 			val := values[i] // set in val the gotten from rows
 			colstring := fmt.Sprintf("\"%s\":", col)
 			byteCol := []byte(colstring) //setting the key as []byte
-			b, ok := val.([]byte)        //setting the value to []byte
+			fmt.Println(col, " ", val)
+			b, ok := val.([]byte) //setting the value to []byte
 			if ok {
 				data = append(data, byteCol...)
 				//controling the varchar
@@ -130,13 +131,25 @@ func getBytes(rows *sql.Rows) []byte {
 						data = append(data, booldata...)
 					}
 				} else {
+
 					data = append(data, b...)
 				}
-				//if to avoid to set the comma at last item
-				if i < len(columns)-1 {
-					comma := []byte(", ")
-					data = append(data, comma...)
+
+			} else {
+				data = append(data, byteCol...)
+				if strings.ToLower(columnTypes[i].DatabaseTypeName()) == "tinyint" {
+					booldata, _ := json.Marshal(false)
+					data = append(data, booldata...)
+				} else {
+					unit8Data := []byte("0")
+					data = append(data, unit8Data...)
+
 				}
+			}
+			//if to avoid to set the comma at last item
+			if i < len(columns)-1 {
+				comma := []byte(", ")
+				data = append(data, comma...)
 			}
 		}
 		endkey := []byte("}")
@@ -150,6 +163,7 @@ func getBytes(rows *sql.Rows) []byte {
 	}
 	end := []byte("]")
 	data = append(data, end...)
+	fmt.Println(string(data))
 	return data
 }
 
