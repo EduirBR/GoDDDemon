@@ -1,10 +1,10 @@
 package services
 
 import (
+	"ddd2/app/extras"
 	"ddd2/domain/entities"
 	"ddd2/infra/repositories"
 	"encoding/json"
-	"log"
 )
 
 var main_obj = entities.Movie{}
@@ -18,12 +18,10 @@ func CreateMovie(obj_json []byte) {
 }
 
 func ListMovies() ([]entities.Movie, error) {
-	data, _ := repositories.GetAll(main_obj.GetDbName(), main_obj) //Estrae las SQLRows
+	data, _ := repositories.GetAll(main_obj.GetDbName()) //Get Bytes
 	var movies []entities.Movie
-	jsonStr, errs := json.Marshal(data)
-	if errs != nil {
-		log.Println(errs)
+	if err := json.Unmarshal(data, &movies); err != nil {
+		extras.Errors(extras.GetFunctionName(), err)
 	}
-	json.Unmarshal(jsonStr, &movies)
 	return movies, nil
 }

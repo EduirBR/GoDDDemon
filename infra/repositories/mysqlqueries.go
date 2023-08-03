@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"database/sql"
+	"ddd2/app/extras"
 	"ddd2/infra/database"
 	"encoding/json"
 	"fmt"
@@ -15,26 +16,24 @@ func CreateTable(query string) error {
 	db := database.DbConnect()
 	defer db.Close()
 	// Ejecutar la consulta SQL
-	a, err := db.Exec(query)
+	_, err := db.Exec(query)
 	if err != nil {
-		database.DbError(err)
+		extras.Errors(extras.GetFunctionName(), err)
 	}
-	fmt.Println(a)
 	return nil
 }
 
 func Insert(tableName string, obj interface{}, jsonD []byte) error {
-	// Obtener el tipo de la estructura
+	//Get the struct Type
 	objType := reflect.TypeOf(obj)
 
-	// Convertir el objeto JSON a un mapa
+	//Parse Json into map
 	var data map[string]interface{}
 	err := json.Unmarshal(jsonD, &data)
 	if err != nil {
-		database.DbError(err)
+		extras.Errors(extras.GetFunctionName(), err)
 	}
-	fmt.Println(data)
-	// Crear la consulta SQL
+	//build the queryset
 	var columns []string
 	var values []interface{}
 	for i := 0; i < objType.NumField(); i++ {
@@ -51,105 +50,123 @@ func Insert(tableName string, obj interface{}, jsonD []byte) error {
 	n_values := strings.Repeat("?, ", len(values)-1) + "?"
 	query := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)", tableName, strings.Join(columns, ", "), n_values)
 
-	fmt.Println(query)
-	//conexion con la base de datos
-
+	//db conect
 	db := database.DbConnect()
 	defer db.Close()
-	// Ejecutar la consulta SQL
+	//sql request
 	_, err = db.Exec(query, values...)
 	if err != nil {
-		database.DbError(err)
+		extras.Errors(extras.GetFunctionName(), err)
 	}
 
 	return nil
 }
 
-func GetAll(tableName string, obj interface{}) ([]map[string]interface{}, error) {
+func GetAll(tableName string) ([]byte, error) {
 	query := fmt.Sprintf("SELECT * FROM %s", tableName)
-
-	objFields := ObjecType(obj)
-	//conexion con la base de datos
+	//db conext
 	db := database.DbConnect()
 	defer db.Close()
-	//consulta
+	//Query
 	rows, err := db.Query(query)
 	if err != nil {
-		database.DbError(err)
+		extras.Errors(extras.GetFunctionName(), err)
 	}
-	//revision de errores
+	//checking errors
 	if err = rows.Err(); err != nil {
-		database.DbError(err)
+		extras.Errors(extras.GetFunctionName(), err)
 	}
-	data := fixSql(rows, objFields)
+	data := getBytes(rows)
 	return data, nil
 }
 
-func fixSql(rows *sql.Rows, objFields []map[string]interface{}) []map[string]interface{} {
-	columns, err := rows.Columns() //extrae las columnas de las filas dadas por la base de datos en un array de strings
+func getBytes(rows *sql.Rows) []byte {
+	columns, err := rows.Columns() //Get The Colums to know the number of them
 	if err != nil {
-		database.DbError(err)
+		extras.Errors(extras.GetFunctionName(), err)
 	}
-	// ty, _ := rows.ColumnTypes()
-	// for _, u := range ty {
-	// 	fmt.Println(u.ScanType())
-	// 	fmt.Println(u.DatabaseTypeName())
-	// }
-	var data []map[string]interface{} // crea un objeto mapa con cuyos valores seran strings
-	for rows.Next() {
+	columnTypes, err := rows.ColumnTypes()
+	if err != nil {
+		extras.Errors(extras.GetFunctionName(), err)
+	}
+	data := []byte{}
+	startkey := []byte("[")
+	data = append(data, startkey...)
+	newlap := rows.Next() // var made to control the loops
+	for newlap {
+		start := []byte("{")
+		data = append(data, start...)
 		values := make([]interface{}, len(columns))
 		valuePtrs := make([]interface{}, len(columns))
 		for i := range columns { // para la cantidad de columnas
-			valuePtrs[i] = &values[i] //crea una cantidad de variables igual a las columnas que hay
+			valuePtrs[i] = &values[i] //make an pointer for values at i
 		}
-		err := rows.Scan(valuePtrs...) // guarda los valores de las filas en cada una de las variables creadas
+		err := rows.Scan(valuePtrs...) //set the items in Values
 		if err != nil {
-			database.DbError(err)
+			extras.Errors(extras.GetFunctionName(), err)
 		}
-		rowData := make(map[string]interface{}) //fila de datos
-		for i, col := range columns {           //itera la cantidad de columnas
-			types := objFields[i][col]
-			val := values[i]      // para guardar los valores de la base de datos en var
-			b, ok := val.([]byte) //verifica si estan en bytes
+
+		for i, col := range columns {
+			val := values[i] // set in val the gotten from rows
+			colstring := fmt.Sprintf("\"%s\":", col)
+			byteCol := []byte(colstring) //setting the key as []byte
+			b, ok := val.([]byte)        //setting the value to []byte
 			if ok {
-				rowData[col] = VarType(b, types) //si? los convierte en string
-			} else {
-				rowData[col] = val //no? los guarda como estan
+				data = append(data, byteCol...)
+				//controling the varchar
+				if strings.ToLower(columnTypes[i].DatabaseTypeName()) == "varchar" {
+					p1 := []byte("\"")
+					p2 := []byte("\"")
+					data = append(data, p1...)
+					data = append(data, b...)
+					data = append(data, p2...)
+				} else if strings.ToLower(columnTypes[i].DatabaseTypeName()) == "tinyint" {
+					//controlling bools
+					if string(b) == "1" {
+						booldata, _ := json.Marshal(true)
+						data = append(data, booldata...)
+					} else {
+						booldata, _ := json.Marshal(false)
+						data = append(data, booldata...)
+					}
+				} else {
+					data = append(data, b...)
+				}
+				//if to avoid to set the comma at last item
+				if i < len(columns)-1 {
+					comma := []byte(", ")
+					data = append(data, comma...)
+				}
 			}
 		}
-		data = append(data, rowData) // guarda en un arreglo los mapas
+		endkey := []byte("}")
+		data = append(data, endkey...)
+		//controller to dont set the comma at last lap
+		newlap = rows.Next()
+		if newlap {
+			comma := []byte(",")
+			data = append(data, comma...)
+		}
 	}
+	end := []byte("]")
+	data = append(data, end...)
 	return data
 }
 
-func VarType(value []uint8, ty interface{}) any {
-	// fmt.Println(value, " ", ty)
-	tyR := reflect.TypeOf(ty)
-	tya := reflect.ValueOf(ty)
-	fmt.Println(reflect.TypeOf(tya.Type()))
-	fmt.Println("----------------")
-	fmt.Println(tya.Interface())
-	fmt.Println("----------------")
-	hR := reflect.New(tyR)
-	a := reflect.ValueOf(value)
-	hR.Elem().Set(a.Convert(tya.Type()))
-	h := hR.Elem().Interface()
-	fmt.Println(h)
-
-	return "hola"
-}
-func ObjecType(obj interface{}) (objFields []map[string]interface{}) {
+func ObjecType(obj interface{}) map[int]interface{} {
+	//get the object type
 	objType := reflect.TypeOf(obj)
-	//var campos []map[string]interface{}
-	// Crear la consulta SQL
+	//build a map with object type num of fields
+	ValuesFields := make(map[int]interface{}, objType.NumField())
 	for i := 0; i < objType.NumField(); i++ {
+		//get object field on i
 		field := objType.Field(i)
-		columnName := field.Tag.Get("json")
-		columnType := field.Type.Kind()
-		item := map[string]any{
-			columnName: columnType,
-		}
-		objFields = append(objFields, item)
+		//get the type
+		columnType := field.Type
+		//make a default value with that column type
+		zerovalue := reflect.Zero(columnType).Interface()
+		//set the value on the map with key i
+		ValuesFields[i] = zerovalue
 	}
-	return
+	return ValuesFields
 }
