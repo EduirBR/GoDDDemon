@@ -9,7 +9,7 @@ import (
 
 func GetMovies(c *fiber.Ctx) error {
 	c.Set("Context-Type", "applicaction/json")
-	objs, err := services.GetMovies()
+	objs, err := services.ListMovies()
 	if err != nil {
 
 	}
