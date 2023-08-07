@@ -1,8 +1,8 @@
 package services
 
 import (
-	"ddd2/app/extras"
 	"ddd2/domain/entities"
+	"ddd2/domain/extras"
 	"ddd2/infra/repositories"
 	"encoding/json"
 )

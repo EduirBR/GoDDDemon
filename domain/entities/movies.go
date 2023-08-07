@@ -1,7 +1,7 @@
 package entities
 
 import (
-	"ddd2/app/extras"
+	"ddd2/domain/extras"
 	"encoding/json"
 	"fmt"
 	"reflect"

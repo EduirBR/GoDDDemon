@@ -2,7 +2,7 @@ package repositories
 
 import (
 	"database/sql"
-	"ddd2/app/extras"
+	"ddd2/domain/extras"
 	"ddd2/infra/database"
 	"encoding/json"
 	"fmt"
