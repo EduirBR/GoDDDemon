@@ -23,7 +23,11 @@ func CreateMovie(c *fiber.Ctx) error {
 	obj := fiber.Map{}
 	c.BodyParser(&obj)
 	objJSON, _ := json.Marshal(obj)
-	services.CreateMovie(objJSON)
+	err := services.CreateMovie(objJSON)
+	if err != nil {
+		return c.Status(fiber.StatusNotFound).SendString(err.Error())
+	}
+	c.Status(fiber.StatusOK).SendString("Obj Created")
 	return nil
 }
 func UpdateMovie(c *fiber.Ctx) error {
@@ -34,7 +38,11 @@ func UpdateMovie(c *fiber.Ctx) error {
 	obj := fiber.Map{}
 	c.BodyParser(&obj)
 	objJSON, _ := json.Marshal(obj)
-	services.UpdateMovie(objJSON, id)
+	err = services.EditMovie(objJSON, id)
+	if err != nil {
+		return c.Status(fiber.StatusNotFound).SendString(err.Error())
+	}
+	c.Status(fiber.StatusOK).SendString("Obj Updated")
 	return nil
 }
 

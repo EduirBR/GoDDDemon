@@ -13,14 +13,22 @@ func CreateTableMovies() {
 	repositories.RunSql(main_obj.DbSchema())
 }
 
-func CreateMovie(obj_json []byte) {
+func CreateMovie(obj_json []byte) error {
 	query, values := main_obj.Sqline("insert", obj_json)
-	repositories.InsertUpdate(query, values)
+	err := repositories.InsertUpdate(query, values)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
-func UpdateMovie(obj_json []byte, id int) {
+func EditMovie(obj_json []byte, id int) error {
 	query, values := main_obj.Sqline("update", obj_json, id)
-	repositories.InsertUpdate(query, values)
+	err := repositories.InsertUpdate(query, values)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func ListMovies() ([]entities.Movie, error) {
@@ -29,6 +37,7 @@ func ListMovies() ([]entities.Movie, error) {
 	var movies []entities.Movie
 	if err := json.Unmarshal(data, &movies); err != nil {
 		extras.Errors(extras.GetFunctionName(), err)
+		return nil, err
 	}
 	return movies, nil
 }
@@ -39,6 +48,7 @@ func RetreiveMovie(id int) ([]entities.Movie, error) {
 	var movies []entities.Movie
 	if err := json.Unmarshal(data, &movies); err != nil {
 		extras.Errors(extras.GetFunctionName(), err)
+		return nil, err
 	}
 	return movies, nil
 }

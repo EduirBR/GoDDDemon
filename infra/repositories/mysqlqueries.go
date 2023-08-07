@@ -29,11 +29,17 @@ func InsertUpdate(query string, values []interface{}) error {
 	db := database.DbConnect()
 	defer db.Close()
 	//sql request
-	_, err := db.Exec(query, values...)
+	stmt, err := db.Prepare(query)
 	if err != nil {
 		extras.Errors(extras.GetFunctionName(), err)
+		return err
 	}
-
+	defer stmt.Close()
+	_, err = stmt.Exec(values...)
+	if err != nil {
+		extras.Errors(extras.GetFunctionName(), err)
+		return err
+	}
 	return nil
 }
 
