@@ -11,7 +11,7 @@ import (
 )
 
 // db *sql.DB,
-func CreateTable(query string) error {
+func RunSql(query string) error {
 
 	db := database.DbConnect()
 	defer db.Close()
@@ -23,38 +23,13 @@ func CreateTable(query string) error {
 	return nil
 }
 
-func Insert(tableName string, obj interface{}, jsonD []byte) error {
-	//Get the struct Type
-	objType := reflect.TypeOf(obj)
-
-	//Parse Json into map
-	var data map[string]interface{}
-	err := json.Unmarshal(jsonD, &data)
-	if err != nil {
-		extras.Errors(extras.GetFunctionName(), err)
-	}
-	//build the queryset
-	var columns []string
-	var values []interface{}
-	for i := 0; i < objType.NumField(); i++ {
-		field := objType.Field(i)
-		columnName := field.Tag.Get("json")
-		columnValue, ok := data[columnName]
-		if !ok {
-			continue
-		}
-		columns = append(columns, columnName)
-		values = append(values, columnValue)
-	}
-
-	n_values := strings.Repeat("?, ", len(values)-1) + "?"
-	query := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)", tableName, strings.Join(columns, ", "), n_values)
+func InsertUpdate(query string, values []interface{}) error {
 
 	//db conect
 	db := database.DbConnect()
 	defer db.Close()
 	//sql request
-	_, err = db.Exec(query, values...)
+	_, err := db.Exec(query, values...)
 	if err != nil {
 		extras.Errors(extras.GetFunctionName(), err)
 	}
@@ -62,8 +37,8 @@ func Insert(tableName string, obj interface{}, jsonD []byte) error {
 	return nil
 }
 
-func GetAll(tableName string) ([]byte, error) {
-	query := fmt.Sprintf("SELECT * FROM %s", tableName)
+func GetAll(query string) ([]byte, error) {
+
 	//db conext
 	db := database.DbConnect()
 	defer db.Close()
@@ -110,7 +85,7 @@ func getBytes(rows *sql.Rows) []byte {
 			val := values[i] // set in val the gotten from rows
 			colstring := fmt.Sprintf("\"%s\":", col)
 			byteCol := []byte(colstring) //setting the key as []byte
-			fmt.Println(col, " ", val)
+			//fmt.Println(col, " ", val)
 			b, ok := val.([]byte) //setting the value to []byte
 			if ok {
 				data = append(data, byteCol...)
@@ -163,7 +138,6 @@ func getBytes(rows *sql.Rows) []byte {
 	}
 	end := []byte("]")
 	data = append(data, end...)
-	fmt.Println(string(data))
 	return data
 }
 

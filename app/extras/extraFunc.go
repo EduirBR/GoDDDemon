@@ -6,8 +6,8 @@ import (
 )
 
 func GetFunctionName() string {
-	pc, _, _, _ := runtime.Caller(1)
-	return runtime.FuncForPC(pc).Name()
+	fun, _, _, _ := runtime.Caller(1)
+	return runtime.FuncForPC(fun).Name()
 }
 
 func Errors(place string, err error) {

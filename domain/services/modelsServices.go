@@ -10,11 +10,11 @@ import (
 var model = entities.Models{}
 
 func CreateTableModels() {
-	repositories.CreateTable(model.DbSchema())
+	repositories.RunSql(model.DbSchema())
 }
 
 func CreateModel(obj_json []byte) {
-	repositories.Insert(model.GetDbName(), model, obj_json)
+	//repositories.Insert(model.GetDbName(), model, obj_json)
 }
 
 func ListModels() ([]entities.Movie, error) {
