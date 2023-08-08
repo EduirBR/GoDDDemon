@@ -32,8 +32,8 @@ func EditMovie(obj_json []byte, id int) error {
 }
 
 func ListMovies() ([]entities.Movie, error) {
-	query, _ := main_obj.Sqline("getAll")
-	data, _ := repositories.GetAll(query) //Get Bytes
+	query, _ := main_obj.Sqline("selectAll")
+	data, _ := repositories.Select(query) //Get Bytes
 	var movies []entities.Movie
 	if err := json.Unmarshal(data, &movies); err != nil {
 		extras.Errors(extras.GetFunctionName(), err)
@@ -43,8 +43,8 @@ func ListMovies() ([]entities.Movie, error) {
 }
 
 func RetreiveMovie(id int) ([]entities.Movie, error) {
-	query, _ := main_obj.Sqline("getBy", id)
-	data, _ := repositories.GetAll(query) //Get Bytes
+	query, _ := main_obj.Sqline("selectById", id)
+	data, _ := repositories.Select(query) //Get Bytes
 	var movies []entities.Movie
 	if err := json.Unmarshal(data, &movies); err != nil {
 		extras.Errors(extras.GetFunctionName(), err)

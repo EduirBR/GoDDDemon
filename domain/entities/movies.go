@@ -42,10 +42,10 @@ func (*Movie) GetDbName() string {
 func (Mv *Movie) Sqline(command string, args ...any) (sql string, values []interface{}) {
 
 	switch command {
-	case "getAll":
+	case "selectAll":
 		sql = fmt.Sprintf("SELECT * FROM %s", Mv.GetDbName())
 		values = nil
-	case "getBy":
+	case "selectById":
 		_, id := getargs(args...)
 		sql = fmt.Sprintf("SELECT * FROM %s WHERE id=%s", Mv.GetDbName(), id)
 	case "insert":

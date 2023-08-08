@@ -18,7 +18,7 @@ func CreateModel(obj_json []byte) {
 }
 
 func ListModels() ([]entities.Movie, error) {
-	data, _ := repositories.GetAll(model.GetDbName()) //Get Bytes
+	data, _ := repositories.Select(model.GetDbName()) //Get Bytes
 	var Models []entities.Movie
 	if err := json.Unmarshal(data, &Models); err != nil {
 		extras.Errors(extras.GetFunctionName(), err)

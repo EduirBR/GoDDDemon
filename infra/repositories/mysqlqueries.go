@@ -43,7 +43,7 @@ func InsertUpdate(query string, values []interface{}) error {
 	return nil
 }
 
-func GetAll(query string) ([]byte, error) {
+func Select(query string) ([]byte, error) {
 
 	//db conext
 	db := database.DbConnect()
