@@ -33,7 +33,7 @@ func EditMovie(obj_json []byte, id int) error {
 }
 
 func ListMovies() ([]entities.Movie, error) {
-	query, _ := main_obj.Sqline("selectAll", movide_name, main_obj)
+	query, _ := main_obj.Sqline("selectAll", movide_name, nil)
 	data, _ := repositories.Select(query) //Get Bytes
 	var movies []entities.Movie
 	if err := json.Unmarshal(data, &movies); err != nil {
@@ -44,7 +44,7 @@ func ListMovies() ([]entities.Movie, error) {
 }
 
 func RetreiveMovie(id int) ([]entities.Movie, error) {
-	query, _ := main_obj.Sqline("selectById", movide_name, main_obj, id)
+	query, _ := main_obj.Sqline("selectById", movide_name, nil, id)
 	data, _ := repositories.Select(query) //Get Bytes
 	var movies []entities.Movie
 	if err := json.Unmarshal(data, &movies); err != nil {
@@ -55,7 +55,7 @@ func RetreiveMovie(id int) ([]entities.Movie, error) {
 }
 
 func DeleteMovie(id int) error {
-	query, _ := main_obj.Sqline("delete", movide_name, main_obj, id)
+	query, _ := main_obj.Sqline("delete", movide_name, nil, id)
 	err := repositories.RunSql(query) //Get Bytes
 	if err != nil {
 		extras.Errors(extras.GetFunctionName(), err)
